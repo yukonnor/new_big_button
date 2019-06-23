@@ -25,7 +25,7 @@
 
 const byte debug = 0;
 long time = 0;
-long debounce = 150;
+long debounce = 300;
 
 // clock stuff
 // To make sure variables shared between an ISR and the main program are updated correctly, declare them as volatile.
@@ -38,14 +38,11 @@ const byte BigButtonPin = 19;
 // Readings of the buttons
 byte RecordButtonState = 0;        // BIG button
 byte LastRecordButtonState = 0;
-byte DeleteButtonState = 0;
-byte LastDeleteButtonState = 0;
+byte deletebuttonState = 0;
 byte ClearButtonState = 0;
 
 
-//Clock Reset Keepers
-int ClockKeep = 0;
-int ResetSteps = 33;
+
 
 //RESET BUTTON
 const byte ResetButton = 6; // Reset button pin
@@ -57,7 +54,7 @@ const byte channelSelectPin = A0;
 //FILL BUTTON
 int FillButton = 5;
 int FillButtonState = 0;
-byte FillState[7] = {0,0,0,0,0,0,0};       // Fill can only be on one channel at a time, this is 0 if not on for any channel and channel number (1-6) if on for that channel
+byte FillState[7] = {0,0,0,0,0,0,0};       // store whether the fill is on or off for each channel
 
 //CLEAR BUTTON
 //int ClearState = 0;
@@ -88,7 +85,9 @@ byte newShiftValue6 = 0;
 
 #define TOLERANCE 0
 
-byte looper = 0;          
+//Clock Reset Keepers
+//int ClockKeep = 0;
+byte looper = 0;                // sets the shared 'current step', used in the 'delete' function  
 
 // PATERN LENGTH STUFF
 const byte patLengthPin = A1;   // prev stepLengthPin
@@ -255,7 +254,7 @@ void loop() {
 
   // Get button readings
   RecordButtonState = digitalRead(BigButtonPin);
-  DeleteButtonState = digitalRead(deleteButtonPin);
+  deletebuttonState = digitalRead(deleteButtonPin);
   ClearButtonState = digitalRead(clearButtonPin); 
   ResetButtonState = digitalRead(ResetButton);
   FillButtonState = digitalRead(FillButton);
@@ -264,13 +263,14 @@ void loop() {
 
   if(clkInState == HIGH) {
     looper    = (looper+1);
+    //ClockKeep = (ClockKeep+1);
     currentStep1 = (currentStep1+1);
     currentStep2 = (currentStep2+1);
     currentStep3 = (currentStep3+1);
     currentStep4 = (currentStep4+1);
     currentStep5 = (currentStep5+1);
     currentStep6 = (currentStep6+1);
-    ClockKeep = (ClockKeep+1);
+    
     
     // Write each channels sequence
     digitalWrite(OUT1,Sequence[0+BankState[1]] [currentStep1 + newShiftValue1] || FillState[1]); // if currentFillChannel == 1, OUT1 should be HIGH
@@ -412,9 +412,8 @@ void loop() {
 
   
   // FILL BUTTON
-  // If fill button pressed, the current channel should go in to fill mode
-  // currently breaks when switching channel while holding fill button down (need to go back to that channel to clear fill)
-  // if not the current channel, fill = 0   AKA  when the channel switches, the last channel should have fill = 0
+  // If the fill button pressed, the current channel should go in to fill mode
+  // Fill can only be on one channel at a time (when the channel switches, the last channel should have fill = 0)
   if(FillButtonState == LOW){
     FillState[currentChannel] = 1;
     if(currentChannel != lastChannel){
@@ -423,25 +422,25 @@ void loop() {
     } 
   else {FillState[currentChannel] = 0;}
 
+  // DELETE BUTTON
+  // If the delete button is pressed, do set step of the current pattern to be 0
+  if(deletebuttonState == LOW && millis() - time > debounce){
+    Sequence[currentPattern][looper+1] = 0;
+    time = millis();  
+    }                            
 
-  // if the delete button is pressed, do XYZ
-  if(DeleteButtonState == LOW){
-  Sequence[currentPattern][looper+1] = 0;}                            
-
-
-  // if the reset button does not equal last reset button state (debounce attempt?)
-  // and if the reset button is pressed, do XYZ
-  if(ResetButtonState != LastResetButtonState){
-        if(ResetButtonState == LOW) {
-        looper = 0;  
-        ClockKeep = 0;
-        currentStep1 = 0;
-        currentStep2 = 0;
-        currentStep3 = 0;
-        currentStep4 = 0;
-        currentStep5 = 0;
-        currentStep6 = 0;
-        }
+  // RESET BUTTON
+  // If the reset button is pressed, set the current steps to 0 (start from step 1 of the patterns)
+  if(ResetButtonState == LOW && millis() - time > debounce) {
+    looper = 0;  
+    //ClockKeep = 0;
+    currentStep1 = 0;
+    currentStep2 = 0;
+    currentStep3 = 0;
+    currentStep4 = 0;
+    currentStep5 = 0;
+    currentStep6 = 0;
+    time = millis();   
    } 
 
   // Determine how many steps the looping pattern is
@@ -454,7 +453,7 @@ void loop() {
   if(1000<patLengthPotRead){steps=32;}                                    
 
   if(looper >= steps) {looper = 0;}   //this bit starts the sequence over again
-  if(ClockKeep >= 32) {looper = 0; ClockKeep = 0;}
+  //if(ClockKeep >= 32) {looper = 0; ClockKeep = 0;}
   if((currentStep1  + newShiftValue1) >= steps) {currentStep1 = 0;}
   if((currentStep2  + newShiftValue2) >= steps) {currentStep2 = 0;}
   if((currentStep3  + newShiftValue3) >= steps) {currentStep3 = 0;}
@@ -473,7 +472,3 @@ void loop() {
 
 } // END LOOP
  
-  
-  
-
-
