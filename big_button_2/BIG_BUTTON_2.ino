@@ -1,14 +1,4 @@
-// TO DO:
-// - it'd be nice if you could see the beginning of the 'loop' with an LED flash - Beginning of Cycle
-// - would be able to sync up w/ starting of other loops using the 'reset' button 
-// - reduce to 4 outputs
-// - remove 'shift' 
-// - quantize record button hits? Or figure out how to make record button hits
-// Available pins: 17(A3), 18(A4), 0, 1, 3
-
-
 // Clock Input ... Pin 2 (available for "Interupts")
-
 // Clear Button .. Pin 4 (clears the entire loop sequence for the current channel and bank)
 // Delete Button . Pin 7 (deletes the current step for the current channel and bank)
 // Bank Button ... Pin 3 (each channel has 2 banks where alternative patterns can be recored and stored. this button toggles the bank for the current channeL)
@@ -175,18 +165,20 @@ void debuger(){
   Serial.print("Clock In = ");
   Serial.println(clkInState);
   
-  //Serial.print("Big Button = ");
-  //Serial.print(recordButtonState);
-  //Serial.print("  Bank Button = ");
-  //Serial.print(ButtonBankSelectState[BankArrayNumber]);
-  //Serial.print("  Clear Button = ");
-  //Serial.print(clearButtonState);
-  //Serial.print("  Fill Button = ");
-  //Serial.print(fillButtonState);
-  //Serial.print("  Reset Button = ");
-  //Serial.print(resetButtonState);
-  //Serial.print("  Delete Button = ");
-  //Serial.println(DeleteButtonState);
+  /*
+   * Serial.print("Big Button = ");
+   * Serial.print(recordButtonState);
+   * Serial.print("  Bank Button = ");
+   * Serial.print(ButtonBankSelectState[BankArrayNumber]);
+   * Serial.print("  Clear Button = ");
+   * Serial.print(clearButtonState);
+   * Serial.print("  Fill Button = ");
+   * Serial.print(fillButtonState);
+   * Serial.print("  Reset Button = ");
+   * Serial.print(resetButtonState);
+   * Serial.print("  Delete Button = ");
+   * Serial.println(DeleteButtonState);
+   */
 
   // POT TESTING
   Serial.print("Current Channel = ");
